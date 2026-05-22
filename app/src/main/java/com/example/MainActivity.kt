@@ -7,9 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.analyzer.AnalyzerAppScreen
-import com.example.analyzer.AnalyzerViewModel
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,10 +15,9 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme(darkTheme = true) {
+      MyApplicationTheme(darkTheme = true) { // Force Dark Mode aesthetic for reverse engineering vibe
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-          val viewModel: AnalyzerViewModel = viewModel()
-          AnalyzerAppScreen(viewModel)
+          AnalyzerAppScreen()
         }
       }
     }
