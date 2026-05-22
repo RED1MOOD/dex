@@ -502,7 +502,14 @@ fun ReportDetailView(
                         .height(48.dp),
                     textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
                     singleLine = true,
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                        { 
+                            IconButton(onClick = { viewModel.updateSearchQuery("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear search", modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    } else null
                 )
 
                 // Category filters
