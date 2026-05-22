@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">محلل ملفات APK و DEX</string>
+    <string name="target_workspace_source">مصدر العمل المستهدف</string>
+    <string name="target_workspace_description">استيراد أي ملف APK أو ملف DEX (يتم فهرسة ملفات classes.dex تلقائيًا)</string>
+    <string name="load_target">تحميل الملف</string>
+    <string name="no_target_loaded">لم يتم تحميل ملف للتحليل</string>
+    <string name="select_file_now">اختر ملفًا الآن</string>
+    <string name="analyzing">جاري التحليل واستخراج الشيفرة...</string>
+    <string name="processing_signatures">يجري معالجة الملفات في الخلفية...</string>
+    <string name="error_extraction">خطأ في استخراج البيانات</string>
+    <string name="try_again">حاول مجددًا</string>
+    <string name="database_index">فهرس قاعدة البيانات</string>
+    <string name="clear_database">مسح الفهرس</string>
+    <string name="no_saved_reports">لا توجد تقارير محفوظة</string>
+    <string name="saved_reports_description">يتم فهرسة التقارير التي تمت معالجتها هنا تلقائيًا.</string>
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="scan_billing">فحص دوالي الشراء</string>
+    <string name="scan_methods">فحص الدوال الحرجة</string>
+    <string name="scan_heuristic">فحص الأنماط الاستدلالية</string>
+    <string name="scan_network">فحص اتصالات الشبكة</string>
+</resources>

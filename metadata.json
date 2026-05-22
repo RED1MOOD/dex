@@ -1,0 +1,6 @@
+{
+  "name": "APK & DEX Analyzer",
+  "description": "Professional DEX static analysis app to detect billing, verification, subscription and feature unlock logic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
