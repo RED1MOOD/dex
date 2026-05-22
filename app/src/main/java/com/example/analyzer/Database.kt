@@ -32,7 +32,7 @@ interface SavedReportDao {
     suspend fun deleteAllReports()
 }
 
-@Database(entities = [SavedReport::class], version = 1, exportSchema = false)
+@Database(entities = [SavedReport::class], version = 2, exportSchema = false)
 @TypeConverters(RoomTypeConverters::class)
 abstract class AnalyzerDatabase : RoomDatabase() {
     abstract fun savedReportDao(): SavedReportDao
