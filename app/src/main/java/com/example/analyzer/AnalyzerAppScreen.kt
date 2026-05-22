@@ -34,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -626,12 +628,24 @@ fun ReportDetailView(
                 )
             }
         } else {
+            var expandedFindings by remember { mutableStateOf(setOf<AnalysisFinding>()) }
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(filteredFindings) { finding ->
-                    FindingItemCard(finding = finding, onViewSmali = { onViewSmali(finding) })
+                    FindingItemCard(
+                        finding = finding,
+                        isExpanded = expandedFindings.contains(finding),
+                        onToggleExpand = {
+                            expandedFindings = if (expandedFindings.contains(finding)) {
+                                expandedFindings - finding
+                            } else {
+                                expandedFindings + finding
+                            }
+                        },
+                        onViewSmali = { onViewSmali(finding) }
+                    )
                 }
             }
         }
@@ -641,6 +655,8 @@ fun ReportDetailView(
 @Composable
 fun FindingItemCard(
     finding: AnalysisFinding,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onViewSmali: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -657,9 +673,11 @@ fun FindingItemCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggleExpand() },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(if (isExpanded) 3.dp else 1.dp)
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -689,6 +707,22 @@ fun FindingItemCard(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
                             )
+                        }
+                        if (finding.confidence >= 90) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFFFFC107))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "HIGH RISK",
+                                    color = Color.Black,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -727,37 +761,58 @@ fun FindingItemCard(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = finding.reason,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(4.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                val clipboardManager = LocalClipboardManager.current
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(onClick = { clipboardManager.setText(AnnotatedString(finding.className)) }, modifier = Modifier.weight(1f)) {
+                        Text("نسخ الكلاس", fontSize = 10.sp)
+                    }
+                    OutlinedButton(onClick = { clipboardManager.setText(AnnotatedString(finding.methodName)) }, modifier = Modifier.weight(1f)) {
+                        Text("نسخ الدالة", fontSize = 10.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 Text(
-                    text = "Source: ${finding.dexFileName}",
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
+                    text = finding.reason,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = "Package: ${finding.packageName}",
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Source: ${finding.dexFileName}",
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Package: ${finding.packageName}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
