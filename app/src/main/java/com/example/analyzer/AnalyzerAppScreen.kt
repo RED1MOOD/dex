@@ -575,7 +575,7 @@ fun ReportDetailView(
                         Package: ${it.packageName}
                         File: ${it.dexFileName}
                         Reason: ${it.reason}
-                        Explanation: ${it.detailedExplanation}
+                        Explanation: ${it.detailedExplanation ?: "N/A"}
                         Confidence: ${it.confidence}%
                         Pattern: ${it.triggerPattern}
                         Strings: ${it.referencedStrings.joinToString(", ")}
@@ -709,7 +709,7 @@ fun FindingItemCard(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text("شرح المنطق المكتشف") },
-            text = { Text(finding.detailedExplanation) },
+            text = { Text(finding.detailedExplanation ?: "لا يوجد شرح متاح.") },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) { Text("إغلاق") }
             }

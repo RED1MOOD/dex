@@ -36,7 +36,7 @@ data class AnalysisFinding(
     val packageName: String,
     val dexFileName: String,
     val reason: String,
-    val detailedExplanation: String = "", // NEW FIELD
+    val detailedExplanation: String? = null, // Updated to nullable to prevent deserialization issues
     val confidence: Int,   // 0 to 100 percent
     val triggerPattern: String,
     val smaliSnippet: String = "",
