@@ -159,64 +159,66 @@ class AnalyzerEngine(private val context: Context) {
                 // Rule-based heuristic verification for purchase, locks and signatures
                 var isMatched = false
                 var matchCategory = ""
-                var confidence = 30
+                var confidence = 0
                 var reason = ""
                 var triggerPattern = ""
 
-                // String references analysis inside opcodes
-                val customPremiumStringSigs = method.referencedStrings.any { str ->
+                // Enhanced Pattern: Look for combination of Premium/License keywords AND control flow
+                val premiumKeywords = setOf(
+                    "premium", "pro", "vip", "subscription", "purchase", "paid", "unlock", "adfree", "license",
+                    "member", "subscriber", "gold", "platinum", "diamond", "trial", "active", "ispremium", 
+                    "ispro", "isvip", "hasaccess", "purchased", "is_premium", "is_pro", "is_vip", "has_access"
+                )
+                
+                val hasPremiumKeyword = method.referencedStrings.any { str ->
                     val lower = str.lowercase()
-                    lower.contains("premium") || lower.contains("license_verified") ||
-                            lower.contains("is_premium") || lower.contains("sub_active") ||
-                            lower.contains("allow_offline") || lower.contains("billing_key")
+                    premiumKeywords.any { kw -> lower.contains(kw) }
+                }
+                
+                // Server-side detection heuristic
+                val networkKeywords = setOf(
+                    "okhttp", "retrofit", "httpurlconnection", "volley", "api", "url", "json", "connection", 
+                    "server", "request", "response", "cloud"
+                )
+                val isServerSide = method.calledMethodsSignatures.any { sig ->
+                    val lower = sig.lowercase()
+                    networkKeywords.any { kw -> lower.contains(kw) }
                 }
 
-                // Call structure validation - network access indicators inside security checks
-                val containsNetworkValidationKeywords = method.calledMethodsSignatures.any {
-                    val scLower = it.lowercase()
-                    scLower.contains("okhttp") || scLower.contains("retrofit") ||
-                            scLower.contains("httpurlconnection") || scLower.contains("validate") ||
-                            scLower.contains("verify")
-                }
+                val hasControlFlow = method.rawOpcodes.any { it.opcodeName.startsWith("if-") }
 
                 if (methodNameLower.contains("launchbillingflow") || methodNameLower.contains("purchase")) {
                     matchCategory = "Purchase Launch Logic"
-                    reason = "Direct matching signature tracking billing initiate flow."
+                    reason = "Critical billing flow initiation." + if (isServerSide) " [SERVER-SIDE]" else ""
                     confidence = 90
                     triggerPattern = "method: $methodName"
                     isMatched = true
-                } else if (methodNameLower.contains("verify") || methodNameLower.contains("validate") || methodNameLower.contains("acknowledge")) {
+                } else if (methodNameLower.contains("verify") || methodNameLower.contains("validate")) {
                     matchCategory = "Receipt Verification"
-                    reason = "Critical billing receipt lookup / online network verify signature."
-                    confidence = 85
-                    triggerPattern = "method: $methodName"
-                    if (containsNetworkValidationKeywords) {
-                        reason += " Also utilizes active network sockets."
-                        confidence = 95
-                    }
-                    isMatched = true
-                } else if (methodNameLower.contains("ispremium") || methodNameLower.contains("unlockpro") || methodNameLower.contains("hasvip") || methodNameLower.contains("isvip") || methodNameLower.contains("checklicense")) {
-                    matchCategory = "Feature Entitlement Gate"
-                    reason = "Defensive validation mechanism shielding premium functionality."
+                    reason = "Serious validation logic." + if (isServerSide) " [SERVER-SIDE]" else ""
                     confidence = 95
                     triggerPattern = "method: $methodName"
                     isMatched = true
-                } else if (customPremiumStringSigs) {
-                    matchCategory = "Local Heuristic Pattern Match"
-                    reason = "Accesses local system properties or licenses strings containing billing credentials."
-                    confidence = 75
-                    triggerPattern = "String contents: " + method.referencedStrings.take(3).joinToString()
+                } else if (hasPremiumKeyword && hasControlFlow) {
+                    matchCategory = "Feature Entitlement Gate"
+                    reason = "Strong evidence of a security gate: premium logic combined with branching control flow." + if (isServerSide) " [SERVER-SIDE]" else ""
+                    confidence = 98
+                    triggerPattern = "Method: $methodName (Control Flow + Premium/Subscription Sig)"
                     isMatched = true
-                } else if (containsNetworkValidationKeywords && (methodNameLower.contains("check") || methodNameLower.contains("status"))) {
-                    matchCategory = "Network License Check"
-                    reason = "Involved in sending API requests or processing license responses."
-                    confidence = 70
-                    triggerPattern = "Network calls: " + method.calledMethodsSignatures.take(1).joinToString()
+                } else if (methodNameLower.contains("ispremium") || methodNameLower.contains("is_premium") || 
+                           methodNameLower.contains("unlockpro") || methodNameLower.contains("ispro") || 
+                           methodNameLower.contains("is_pro") || methodNameLower.contains("hasvip") || 
+                           methodNameLower.contains("isvip") || methodNameLower.contains("is_vip") || 
+                           methodNameLower.contains("issubscribed") || methodNameLower.contains("is_subscribed")) {
+                    matchCategory = "Feature Entitlement Gate"
+                    reason = "Direct entitlement check gate found (premium/subscription status)." + if (isServerSide) " [SERVER-SIDE]" else ""
+                    confidence = 98
+                    triggerPattern = "method: $methodName"
                     isMatched = true
                 }
 
-                if (isMatched) {
-                    // Filter based on settings
+                if (isMatched && confidence >= 80) {
+                    // Filter based on settings (keep existing filter logic)
                     val shouldAdd = when (matchCategory) {
                         "Purchase Launch Logic", "Receipt Verification" -> settings.scanBillingSdk
                         "Feature Entitlement Gate" -> settings.scanCriticalMethods

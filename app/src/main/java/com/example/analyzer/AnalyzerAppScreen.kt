@@ -542,23 +542,54 @@ fun ReportDetailView(
                             onClick = { viewModel.updateFilterType(null); expandedFilters = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("Billing SDK Methods") },
+                            text = { Text("Google Play Billing Api") },
                             onClick = { viewModel.updateFilterType(FindingType.BILLING_SDK); expandedFilters = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("Feature Premium Gates") },
+                            text = { Text("Signature/Pkg Verifiers") },
+                            onClick = { viewModel.updateFilterType(FindingType.NETWORK_VERIFICATION); expandedFilters = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Decision Loops / Boolean Gates") },
                             onClick = { viewModel.updateFilterType(FindingType.CRITICAL_METHOD); expandedFilters = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("Heuristic License Strings") },
+                            text = { Text("Heuristic License Flags") },
                             onClick = { viewModel.updateFilterType(FindingType.HEURISTIC); expandedFilters = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Network Verification Sockets") },
-                            onClick = { viewModel.updateFilterType(FindingType.NETWORK_VERIFICATION); expandedFilters = false }
                         )
                     }
                 }
+            }
+        }
+        
+        item {
+            val clipboardManager = LocalClipboardManager.current
+            Button(
+                onClick = {
+                    val allText = filteredFindings.mapIndexed { index, it ->
+                        """
+                        [${index + 1}]
+                        Category: ${it.category}
+                        Class: ${it.className}
+                        Method: ${it.methodName}
+                        Package: ${it.packageName}
+                        File: ${it.dexFileName}
+                        Reason: ${it.reason}
+                        Explanation: ${it.detailedExplanation}
+                        Confidence: ${it.confidence}%
+                        Pattern: ${it.triggerPattern}
+                        Strings: ${it.referencedStrings.joinToString(", ")}
+                        -------------------------------------------
+                        """.trimIndent()
+                    }.joinToString("\n\n")
+                    clipboardManager.setText(AnnotatedString(allText))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("نسخ كل النتائج")
             }
         }
 
