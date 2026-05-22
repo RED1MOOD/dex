@@ -29,7 +29,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
         application.applicationContext,
         AnalyzerDatabase::class.java,
         "apk_dex_analyzer_db"
-    ).fallbackToDestructiveMigration(true).build()
+    ).fallbackToDestructiveMigration().build()
 
     private val savedReportDao = db.savedReportDao()
     private val engine = AnalyzerEngine(application.applicationContext)
